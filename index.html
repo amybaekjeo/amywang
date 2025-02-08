@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mac 风格桌面和菜单栏</title>
+  <style>
+    /* 基础样式 */
+    body {
+      margin: 0;
+      padding: 0;
+      background: url('images/paper2.JPG') no-repeat center center fixed;
+      background-size: cover;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 模拟 macOS 菜单栏 */
+.menu-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  z-index: 200;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.menu-bar .menu-bar-left,
+.menu-bar .menu-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px; /* 增加子元素之间的间距 */
+}
+
+.menu-bar .menu-bar-left {
+  margin-right: auto; /* 将左侧菜单栏推到左边 */
+}
+
+.menu-bar .menu-bar-right {
+  margin-left: auto; /* 将右侧菜单栏推到右边 */
+  gap: 10px; /* 右侧菜单项之间的间距 */
+}
+
+.menu-bar .menu-item {
+  margin: 0 8px;
+  cursor: default;
+  color: #fff;
+}
+
+.menu-bar img.apple-icon {
+  width: 16px;
+  height: 20px;
+  margin-right: 8px;
+  filter: invert(1);
+}
+
+/* 调整 Wi-Fi 图标的大小 */
+.menu-bar .menu-item1 img.menu-icon {
+  width: 20px; /* 调整为 16px */
+  height: 20px; /* 调整为 16px */
+}
+
+.menu-bar .menu-item2 img.menu-icon {
+  width: 30px; /* 调整为 16px */
+  height: 16px; /* 调整为 16px */
+}
+
+
+    /* 桌面区域 */
+    .desktop {
+      position: absolute;
+      top: 30px;
+      left: 20px;
+      bottom: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 30px;
+    }
+
+    .folder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.3s ease-in-out;
+      width: 100px;
+    }
+
+    .folder img {
+      width: 70px;
+      height: 70px;
+    }
+
+    .folder p {
+      margin-top: 5px;
+      color: white;
+      text-align: center;
+      max-width: 100px;
+      word-break: break-word;
+    }
+
+    .folder:hover {
+      transform: scale(1.1);
+      transition: transform 0.2s ease-in-out;
+    }
+
+    .folder.selected {
+      background-color: rgba(78, 159, 255, 0.7);
+      border-radius: 5px;
+    }
+
+    /* 模态框及遮罩层 */
+    .modal {
+      visibility: hidden;
+      opacity: 0;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      background: white;
+      padding: 40px;
+      width: 80%;
+      height: 80%;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      transition: transform 0.3s ease-out, opacity 0.3s ease-out, visibility 0.3s ease-out;
+      z-index: 300;
+      color: black;
+      overflow: auto;
+    }
+    
+    .modal p {
+  font-size: 14px;  /* 修改为你希望的字体大小 */
+  line-height: 1.5; /* 可选：增加行高以便阅读 */
+  max-width: 600px;     /* 限制最大行宽为600px，根据需要调整 */
+}
+
+    .modal.active {
+      visibility: visible;
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 250;
+    }
+
+    .overlay.active {
+      display: block;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+ /* 画廊容器 */
+ .gallery {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr); /* 固定3列布局 */
+      gap: 10px;
+      padding: 10px;
+    }
+
+    /* 图片容器通用样式 */
+    .image-container {
+      position: relative;
+      overflow: hidden;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: transform 0.3s ease-out;
+      /* 默认使用3:2比例 */
+      aspect-ratio: 3 / 2;
+    }
+
+    /* 大图样式 - 占2列2行，采用2:1比例 */
+    .image-container.large {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+
+    .image-container.large2 {
+      grid-column: span 1;
+      grid-row: span 1;
+      aspect-ratio: 1.3/2;
+      height: 600px;
+    }
+
+
+    /* 中图样式 - 占2列1行，保持3:2比例 */
+    .image-container.medium {
+      grid-column: span 2;
+      grid-row: span 1;
+    }
+
+    /* 小图样式 - 占1列1行，保持3:2比例 */
+    .image-container.small {
+      grid-column: span 1;
+      grid-row: span 1;
+    }
+
+    /* 图片填充方式 */
+    .image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease-out;
+    }
+
+/* 悬停放大效果 */
+.image-container:hover img {
+      transform: scale(2);
+    }
+
+    img, video {
+  width: 100%;
+  height: auto;
+}
+
+    /* 底部菜单栏样式 */
+    .menu-bar-bottom {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      padding: 5px 5px;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      z-index: 300;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .menu-item {
+      position: relative;
+      margin: 0 5px;
+      cursor: pointer;
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+
+    .menu-item img {
+      width: 48px;
+      height: 48px;
+      transition: transform 0.3s ease;
+    }
+
+    .menu-item:hover img:not(.no-zoom) {
+      transform: scale(2);
+      margin: 0 10px;
+    }
+
+    /* 当前应用的指示器 */
+    .menu-item.active::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+    }
+
+    /* 小屏幕适配 */
+    @media (max-width: 768px) {
+      .menu-bar {
+        height: 35px;
+      }
+
+      .desktop {
+        top: 35px;
+        padding: 10px;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .menu-bar-bottom {
+        padding: 12px 20px;
+      }
+
+      .menu-item img {
+        width: 36px;
+        height: 36px;
+      }
+
+      .folder img {
+        width: 90px;
+        height: 90px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="menu-bar">
+    <div class="menu-bar-left">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple" class="apple-icon">
+      <span class="menu-item">Finder</span>
+      <span class="menu-item">File</span>
+      <span class="menu-item">Edit</span>
+      <span class="menu-item">View</span>
+      <span class="menu-item">Go</span>
+      <span class="menu-item">Window</span>
+      <span class="menu-item">Help</span>
+    </div>
+    <div class="menu-bar-right">
+      <span class="menu-item1">
+        <img src="https://img.icons8.com/fluency-systems-filled/48/ffffff/wifi.png" alt="Wi-Fi" class="menu-icon no-zoom">
+      </span>
+      <span class="menu-item2">
+        <img src="images/battery.png" alt="Battery" class="menu-icon no-zoom">
+      </span>
+      <span class="menu-item" id="menu-time">2025-02-07 星期五 14:00</span>
+    </div>
+  </div>
+
+  <!-- 桌面区域 -->
+<div class="desktop">
+  <div class="folder" onclick="selectFolder(event, 'portfolio')" ondblclick="openFolder('portfolio')">
+    <img src="https://img.icons8.com/fluency/48/folder-invoices.png" alt="Project 1">
+    <p>Proj1 Daily Meal</p>
+  </div>
+  <div class="folder" onclick="selectFolder(event, 'contact3')" ondblclick="openFolder('contact3')">
+    <img src="images/folder.png" alt="Project 5">
+    <p>Proj2 M0Th3r</p>
+  </div>
+  <div class="folder" onclick="selectFolder(event, 'about')" ondblclick="openFolder('about')">
+    <img src="images/folder.png" alt="Project 2">
+    <p>Proj3 Bride Price</p>
+  </div>
+  <div class="folder" onclick="selectFolder(event, 'contact2')" ondblclick="openFolder('contact2')">
+    <img src="images/folder.png" alt="Project 4">
+    <p>Proj4 Her web</p>
+  </div>
+  <div class="folder" onclick="selectFolder(event, 'contact1')" ondblclick="openFolder('contact1')">
+    <img src="images/folder.png" alt="Project 3">
+    <p>Proj5 momme</p>
+  </div>
+
+  <div id="overlay" class="overlay"></div>
+
+  <!-- Proj1 - Daily Meal -->
+  <div id="portfolio" class="modal">
+    <span class="close-btn" onclick="closeFolder()">×</span>
+    <h2>每日食报</h2>
+    <h3>Nov 09, 2022</h3>
+    <p>这个项目借用了英国知名报纸《每日邮报》的形式，通过恶搞与讽刺的手法，深入剖析了当代“道德消费品”背后虚假广告与道德胁迫的现象。作者以虚构报纸的方式，精心构建了一系列夸张而又发人深省的报道，从明星八卦、社会热点到法律新政，无不映射出一个问题：在资本逻辑的驱动下，“伦理产品”究竟是否仅仅是商家操控消费者情感和道德判断的工具？</p>
+    <p>项目不仅在表面上对道德消费进行幽默调侃，更在深层次上揭露了现代消费文化中道德与商业利益之间错综复杂的关系。通过极富创意的叙事手法，作者挑战了公众对“道德”标签产品的盲目追捧，促使人们反思在信息泛滥和商业利益交织的时代，真正的伦理消费究竟应当如何定义与实践。</p>
+    <div class="gallery">
+      <div class="image-container small">
+        <img src="images/1.jpg" alt="作品1">
+      </div>
+      <div class="image-container small">
+        <img src="images/2.jpg" alt="作品2">
+      </div>
+      <div class="image-container small">
+        <img src="images/3.jpg" alt="作品3">
+      </div>
+      <div class="image-container small">
+        <img src="images/4.jpg" alt="作品4">
+      </div>
+      <div class="image-container small">
+        <img src="images/paper1.JPG" alt="作品5">
+      </div>
+      <div class="image-container small">
+        <img src="images/paper3.JPG" alt="作品6">
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Proj2 - Bride Price -->
+  <div id="about" class="modal">
+    <span class="close-btn" onclick="closeFolder()">×</span>
+    <h2>妻债</h2>
+    <h3>Jul  25, 2024</h3>
+    <div class="gallery">
+      <div class="image-container large">
+        <img src="images/caili1.png" alt="作品1">
+      </div>
+      <div class="image-container">
+        <img src="images/caili3.png" alt="作品2">
+      </div>
+      <div class="image-container">
+        <img src="images/package.png" alt="作品3">
+      </div>
+    </div>
+    <p>介绍你的背景和艺术理念。</p>
+  </div>
+
+  <!-- Proj3 - momme -->
+  <div id="contact1" class="modal">
+    <span class="close-btn" onclick="closeFolder()">×</span>
+    <h2>母与女</h2>
+    <p>联系方式和社交媒体链接。</p>
+    <div class="gallery">
+      <div class="image-container large2">
+        <img src="images/ai1.jpg" alt="作品1">
+      </div>
+      <div class="image-container large2">
+        <img src="images/33.jpg" alt="作品2">
+      </div>
+      <div class="image-container large2">
+        <img src="images/22.jpg" alt="作品3">
+      </div>
+    </div>
+  </div>
+
+  <!-- Proj4 -->
+  <div id="contact2" class="modal">
+    <span class="close-btn" onclick="closeFolder()">×</span>
+    <h2>姝网</h2>
+    <p>“姝网”，一个充满诗意的名字，却暗含着尖锐的社会批判。这个以女性自我规训为主题的艺术项目，旨在通过装置艺术的形式，撕开“美丽”的面纱，揭示女性身体所承受的无声规训。</p>
+    <div class="gallery">
+      <div class="image-container large">
+        <img src="images/her2.png" alt="作品1">
+      </div>
+      <div class="image-container small">
+        <img src="images/her.JPG" alt="作品2">
+      </div>
+      <div class="image-container small">
+        <img src="images/her3.jpg" alt="作品3">
+      </div>
+    </div>
+  </div>
+</div>
+ <!-- Proj5 - Bride Price -->
+ <div id="contact3" class="modal">
+  <span class="close-btn" onclick="closeFolder()">×</span>
+  <h2>M0Th3r</h2>
+  <h3>May  17, 2023</h3>
+  <div class="gallery">
+    <div class="image-container large2">
+      <img src="images/01.jpg" alt="作品1">
+    </div>
+    <div class="image-container large2">
+      <img src="images/02.jpg" alt="作品2">
+    </div>
+    <div class="image-container large2">
+      <img src="images/03.jpg" alt="作品3">
+    </div>
+    <p>这是一个融合科技与艺术的互动装置作品，通过构建一个具有"人工智能母亲"形象的数字生命体，深入探讨女性形象在AI服务领域被物化与异化的现象。作品以批判性视角审视当下人工智能产品中普遍存在的性别偏见——女性形象被简化为温柔、顺从、无私的服务者角色，被困囿于情感劳动与照料劳动的单一维度中。</p>
+    <P>装置通过人机交互设计，让观众在与"AI母亲"的对话中，切身感受到这种性别刻板印象的强化与再生产，进而引发对技术伦理、性别平等以及人工智能时代女性主体性等议题的深度思考。作品旨在打破技术中性论的迷思，揭示人工智能发展过程中潜藏的性别权力关系，为构建更具包容性与反思性的AI未来提供艺术维度的批判与想象。</P>
+    <div class="image-container large">
+      <img src="images/04.jpg" alt="作品4">
+    </div>
+    <div class="video-container">
+      <video width="320" height="240" controls>
+        <source src="images/femalebot_1.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  </div>
+</div>
+<!-- Proj6 - photos -->
+<div id="photos" class="modal">
+  <span class="close-btn" onclick="closeFolder()">×</span>
+  <h2>照片集锦</h2>
+  <h3>展览及社会活动</h3>
+  <div class="gallery">
+    <div class="image-container small">
+      <img src="images/mwwo.jpg" alt="作品1">
+    </div>
+    <div class="image-container small">
+      <img src="images/mwwo2.jpg" alt="作品2">
+    </div>
+    <div class="image-container small">
+      <img src="images/art2.jpg" alt="作品3">
+    </div>
+    <div class="image-container small">
+      <img src="images/art1.jpg" alt="作品4">
+    </div>
+    <div class="image-container small">
+      <img src="images/art3.JPG" alt="作品5">
+    </div>
+    <div class="image-container small">
+      <img src="images/art5.jpg" alt="作品6">
+    </div>
+
+  </div>
+</div>
+  <div class="menu-bar-bottom">
+    <div class="menu-item active">
+      <img src="images/finder.png" alt="Desktop">
+    </div>
+    <div class="menu-item">
+      <img src="images/siri.png" alt="Settings">
+    </div>
+    <div class="menu-item">
+      <img src="images/pages.png" alt="Apps">
+    </div>
+    <div class="menu-item">
+      <img src="images/safari.png" alt="Finder">
+    </div>
+    <div class="menu-item">
+      <img src="images/calender.png" alt="Mail">
+    </div>
+    <div class="menu-item">
+      <img src="images/photos.png" alt="Mail" onclick="openFolder('photos')">
+    
+    </div>
+  </div>
+
+  <script>
+    setInterval(() => {
+      const time = new Date();
+      document.getElementById('menu-time').textContent = time.toLocaleString('zh-CN');
+    }, 1000);
+
+    function selectFolder(event, folderId) {
+      document.querySelectorAll('.folder').forEach(folder => folder.classList.remove('selected'));
+      event.currentTarget.classList.add('selected');
+    }
+
+    function openFolder(folderId) {
+      document.getElementById(folderId).classList.add('active');
+      document.getElementById('overlay').classList.add('active');
+    }
+
+    function closeFolder() {
+      document.querySelectorAll('.modal').forEach(modal => modal.classList.remove('active'));
+      document.getElementById('overlay').classList.remove('active');
+    }
+  // 添加鼠标移动时的局部放大效果
+  const images = document.querySelectorAll('.gallery img');
+    images.forEach(img => {
+      img.addEventListener('mousemove', (e) => {
+        const rect = img.getBoundingClientRect();
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
+        
+        const xPercent = offsetX / rect.width * 100;
+        const yPercent = offsetY / rect.height * 100;
+        
+        img.style.transformOrigin = `${xPercent}% ${yPercent}%`;
+      });
+    });
+  </script>
+</body>
+</html>
