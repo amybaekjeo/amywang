@@ -89,6 +89,25 @@
       align-items: flex-start;
       gap: 30px;
     }
+/* Postnotes 图片样式 */
+.notes {
+  position: fixed;
+  top: 50%;
+  right: 300px;
+  transform: translateY(-50%);
+  width: 150px; /* 根据需要调整宽度 */
+  z-index: 100;
+}
+
+.notes img {
+  width: 100%;
+  height: auto;
+  transition: transform 0.3s ease-in-out;
+}
+
+.notes img:hover {
+  transform: scale(1.1);
+}
 
     .folder {
       display: flex;
@@ -366,6 +385,10 @@
     <p>Proj5 momme</p>
   </div>
 
+<div class="notes">
+    <img src="images/notes.png" alt="notes">
+  </div>
+  
   <div id="overlay" class="overlay"></div>
 
   <!-- Proj1 - Daily Meal -->
